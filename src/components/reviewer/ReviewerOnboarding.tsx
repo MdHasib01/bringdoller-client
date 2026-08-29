@@ -16,7 +16,7 @@ import {
   Play,
   Lock,
 } from 'lucide-react';
-import { VideoRecorderMock } from '../common/VideoRecorderMock';
+import { VideoRecorder } from '../common/VideoRecorder';
 import { maskNid } from '../../utils/formatters';
 
 export const ReviewerOnboarding: React.FC = () => {
@@ -526,7 +526,7 @@ export const ReviewerOnboarding: React.FC = () => {
           </div>
 
           {/* Interactive Video Recorder */}
-          <VideoRecorderMock
+          <VideoRecorder
             lang={language}
             productContextName="রয়াল উদ আতর অডিশন"
             minDurationSeconds={60}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   ShieldCheck,
   Sparkles,
@@ -20,25 +21,20 @@ import {
 } from 'lucide-react';
 import { formatBdt } from '../../utils/formatters';
 
-interface LandingPageProps {
-  onOpenAuth?: (role: 'reviewer' | 'brand' | 'admin') => void;
-}
-
-export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
-  const { language, setCurrentRole } = useApp();
+export const LandingPage: React.FC = () => {
+  const { language } = useApp();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
+  // Signed-in users with a matching role go straight to their dashboard;
+  // everyone else starts the signup flow (admin approves before login works).
   const handleReviewerClick = () => {
-    setCurrentRole('reviewer');
-    if (onOpenAuth) onOpenAuth('reviewer');
-    navigate('/reviewer');
+    navigate(user?.role === 'reviewer' ? '/reviewer' : '/signup?role=reviewer');
   };
 
   const handleBrandClick = () => {
-    setCurrentRole('brand');
-    if (onOpenAuth) onOpenAuth('brand');
-    navigate('/brand');
+    navigate(user?.role === 'brand' ? '/brand' : '/signup?role=brand');
   };
 
 

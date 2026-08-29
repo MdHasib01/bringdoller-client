@@ -4,9 +4,37 @@
 const API_BASE_URL: string =
   (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
 
+const AUTH_TOKEN_STORAGE_KEY = 'bringdollar_auth_token';
+
+let authToken: string | null = (() => {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+})();
+
+/** Called by AuthContext on login/logout so every request carries the current JWT. */
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+  try {
+    if (token) localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+    else localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    // localStorage unavailable (private mode, etc.) — token still held in memory
+  }
+}
+
+export function getAuthToken(): string | null {
+  return authToken;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
+
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...headers, ...(options.headers as Record<string, string> | undefined) },
     ...options,
   });
   if (!res.ok) {

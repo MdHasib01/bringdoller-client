@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
 import {
   Bell,
@@ -8,10 +9,7 @@ import {
   Shield,
   Smartphone,
   Briefcase,
-  UserCheck,
-  ChevronDown,
-  Sparkles,
-  LayoutDashboard,
+  LogOut,
 } from 'lucide-react';
 import { NotificationDrawer } from './NotificationDrawer';
 import { StoreSwitcher } from '../brand/StoreSwitcher';
@@ -26,12 +24,12 @@ export const Header: React.FC = () => {
     brandProfile,
     notifications,
   } = useApp();
+  const { user, logout } = useAuth();
 
   const navigate = useNavigate();
   const location = useLocation();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -80,12 +78,18 @@ export const Header: React.FC = () => {
     }
   }, [location.pathname, currentRole, setCurrentRole]);
 
-  const currentRoleConfig = roleConfigs[currentRole] || roleConfigs.guest;
+  // Driven by the authenticated user's role (not the route-synced `currentRole`,
+  // which lags a render behind right after login/logout/redirects).
+  const badgeRole: UserRole = user?.role || 'guest';
+  const currentRoleConfig = roleConfigs[badgeRole] || roleConfigs.guest;
 
-  const handleRoleSelect = (roleKey: UserRole) => {
-    setCurrentRole(roleKey);
-    setIsRoleDropdownOpen(false);
-    navigate(roleConfigs[roleKey].path);
+  const handleLogout = () => {
+    // No manual navigate() here: ProtectedRoute already redirects to /login the
+    // instant `user` goes null on a guarded route, and racing it with an explicit
+    // navigate('/') in the same tick is unreliable. On public routes there's
+    // nothing to redirect from, so clearing auth state alone is sufficient.
+    logout();
+    setCurrentRole('guest');
   };
 
   return (
@@ -125,59 +129,15 @@ export const Header: React.FC = () => {
             </button>
           </div>
 
-          {/* Center Persona Switcher Pill (Quick Role Simulator) */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-semibold text-xs transition-all shadow-md ${currentRoleConfig.color} hover:brightness-110`}
-            >
-              <currentRoleConfig.icon className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">
-                {language === 'bn' ? currentRoleConfig.labelBn : currentRoleConfig.labelEn}
-              </span>
-              <span className="md:hidden capitalize font-mono text-[11px] font-bold">
-                {currentRole}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 opacity-70 ml-0.5" />
-            </button>
-
-            {/* Persona Switcher Dropdown */}
-            {isRoleDropdownOpen && (
-              <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 w-64 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                <div className="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1">
-                  {language === 'bn' ? 'ব্যবহারকারী ভূমিকা নির্বাচন করুন' : 'Select User Persona'}
-                </div>
-
-                {(Object.keys(roleConfigs) as UserRole[]).map((roleKey) => {
-                  const cfg = roleConfigs[roleKey];
-                  const isSelected = currentRole === roleKey;
-                  const Icon = cfg.icon;
-
-                  return (
-                    <button
-                      key={roleKey}
-                      onClick={() => handleRoleSelect(roleKey)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-xs font-semibold transition-colors ${
-                        isSelected
-                          ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 ${isSelected ? 'text-emerald-400' : 'text-slate-400'}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate">
-                          {language === 'bn' ? cfg.labelBn : cfg.labelEn}
-                        </div>
-                      </div>
-                      {isSelected && (
-                        <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+          {/* Current Section Badge */}
+          <div
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-semibold text-xs shadow-md ${currentRoleConfig.color}`}
+          >
+            <currentRoleConfig.icon className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">
+              {language === 'bn' ? currentRoleConfig.labelBn : currentRoleConfig.labelEn}
+            </span>
+            <span className="md:hidden capitalize font-mono text-[11px] font-bold">{badgeRole}</span>
           </div>
 
           {/* Right Utilities: Language Toggle, Notifications, Profile Avatar */}
@@ -208,7 +168,7 @@ export const Header: React.FC = () => {
             </button>
 
             {/* User Profile Thumbnail */}
-            {currentRole === 'reviewer' ? (
+            {user?.role === 'reviewer' ? (
               <div className="flex items-center gap-2 pl-1">
                 <img
                   src={reviewerProfile.avatarUrl}
@@ -216,52 +176,68 @@ export const Header: React.FC = () => {
                   className="w-8 h-8 rounded-full object-cover ring-2 ring-emerald-500/40"
                 />
                 <div className="hidden xl:block text-left">
-                  <div className="text-xs font-bold text-white leading-tight">
-                    {reviewerProfile.displayName}
-                  </div>
+                  <div className="text-xs font-bold text-white leading-tight">{user.name}</div>
                   <div className="text-[10px] text-emerald-400 font-medium">
                     {reviewerProfile.levelId.toUpperCase()}
                   </div>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  title={language === 'bn' ? 'লগ আউট' : 'Log out'}
+                  className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-rose-400 border border-slate-800 transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
               </div>
-            ) : currentRole === 'brand' ? (
+            ) : user?.role === 'brand' ? (
               <div className="flex items-center gap-2">
                 <StoreSwitcher />
                 <div className="hidden xl:flex items-center gap-2 pl-1 border-l border-white/10 ml-1">
                   <div className="text-right">
-                    <div className="text-xs font-bold text-white leading-tight">
-                      {brandProfile.companyName || 'Verified Owner'}
-                    </div>
-                    <div className="text-[10px] text-amber-400 font-medium">
-                      Multi-Store Owner
-                    </div>
+                    <div className="text-xs font-bold text-white leading-tight">{user.name}</div>
+                    <div className="text-[10px] text-amber-400 font-medium">Multi-Store Owner</div>
                   </div>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  title={language === 'bn' ? 'লগ আউট' : 'Log out'}
+                  className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-rose-400 border border-slate-800 transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
               </div>
-            ) : currentRole === 'admin' ? (
+            ) : user?.role === 'admin' ? (
               <div className="flex items-center gap-2 pl-1">
                 <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-xs">
                   ADM
                 </div>
                 <div className="hidden xl:block text-left">
-                  <div className="text-xs font-bold text-white leading-tight">
-                    Super Admin
-                  </div>
-                  <div className="text-[10px] text-amber-400 font-medium">
-                    Master Access
-                  </div>
+                  <div className="text-xs font-bold text-white leading-tight">{user.name}</div>
+                  <div className="text-[10px] text-amber-400 font-medium">Master Access</div>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  title={language === 'bn' ? 'লগ আউট' : 'Log out'}
+                  className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-rose-400 border border-slate-800 transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
               </div>
             ) : (
-              <button
-                onClick={() => {
-                  setCurrentRole('reviewer');
-                  navigate('/reviewer');
-                }}
-                className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all"
-              >
-                {language === 'bn' ? 'লগইন করুন' : 'Sign In'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white border border-slate-800 font-bold text-xs transition-all"
+                >
+                  {language === 'bn' ? 'সাইন ইন' : 'Sign In'}
+                </button>
+                <button
+                  onClick={() => navigate('/signup')}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all"
+                >
+                  {language === 'bn' ? 'সাইন আপ' : 'Sign Up'}
+                </button>
+              </div>
             )}
           </div>
         </div>

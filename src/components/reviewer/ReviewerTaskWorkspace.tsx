@@ -29,7 +29,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { StatusChip } from '../common/StatusChip';
-import { VideoRecorderMock } from '../common/VideoRecorderMock';
+import { VideoRecorder } from '../common/VideoRecorder';
 import { formatBdt, toBengaliDigits } from '../../utils/formatters';
 import { CampaignDetailModal } from '../common/CampaignDetailModal';
 
@@ -392,7 +392,7 @@ export const ReviewerTaskWorkspace: React.FC = () => {
       </div>
 
       {/* Video Recorder Studio */}
-      <VideoRecorderMock
+      <VideoRecorder
         lang={language}
         productContextName={selectedTask.productName}
         minDurationSeconds={60}

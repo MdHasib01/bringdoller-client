@@ -1,9 +1,13 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
+import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/common/Header';
 import { ToastContainer } from './components/common/ToastContainer';
 import { LandingPage } from './components/public/LandingPage';
+import { LoginPage } from './components/auth/LoginPage';
+import { SignupPage } from './components/auth/SignupPage';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { ReviewerOnboarding } from './components/reviewer/ReviewerOnboarding';
 import { ReviewerDashboard } from './components/reviewer/ReviewerDashboard';
 import { ReviewerTaskWorkspace } from './components/reviewer/ReviewerTaskWorkspace';
@@ -114,8 +118,19 @@ const AppContent: React.FC = () => {
           {/* Root / Route shows the Public Landing page */}
           <Route path="/" element={<LandingPage />} />
 
+          {/* Authentication */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+
           {/* Reviewer Portal with nested tab workspace */}
-          <Route path="/reviewer/*" element={<ReviewerLayout />} />
+          <Route
+            path="/reviewer/*"
+            element={
+              <ProtectedRoute allow={['reviewer']}>
+                <ReviewerLayout />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Direct shortcut aliases redirecting to Reviewer views */}
           <Route path="/opportunities" element={<Navigate to="/reviewer" replace />} />
@@ -128,10 +143,24 @@ const AppContent: React.FC = () => {
           <Route path="/onboarding" element={<Navigate to="/reviewer/onboarding" replace />} />
 
           {/* Brand & Multi-Store Dashboard */}
-          <Route path="/brand/*" element={<BrandDashboard />} />
+          <Route
+            path="/brand/*"
+            element={
+              <ProtectedRoute allow={['brand']}>
+                <BrandDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin Command Center */}
-          <Route path="/admin/*" element={<AdminDashboard />} />
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute allow={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* 404 Fallback */}
           <Route path="*" element={<NotFoundPage />} />
@@ -146,8 +175,10 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </AuthProvider>
   );
 }

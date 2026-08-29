@@ -19,6 +19,7 @@ import {
   Layers,
   Activity,
   Sliders,
+  UserPlus,
 } from 'lucide-react';
 import { formatBdt, toBengaliDigits } from '../../utils/formatters';
 import { ReviewerDirectory } from './ReviewerDirectory';
@@ -26,6 +27,7 @@ import { BrandsDirectory } from './BrandsDirectory';
 import { ProductDirectory } from './ProductDirectory';
 import { DeliveryCommandCenter } from './DeliveryCommandCenter';
 import { AssignmentExplorer } from './AssignmentExplorer';
+import { AccountApprovals } from './AccountApprovals';
 
 export const AdminDashboard: React.FC = () => {
   const {
@@ -41,8 +43,8 @@ export const AdminDashboard: React.FC = () => {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<
-    'reviewers' | 'stores' | 'products' | 'logistics' | 'hierarchy' | 'verifications' | 'disputes' | 'escrow'
-  >('reviewers');
+    'reviewers' | 'stores' | 'products' | 'logistics' | 'hierarchy' | 'signups' | 'verifications' | 'disputes' | 'escrow'
+  >('signups');
 
   const totalEscrowHeld = campaigns.reduce((acc, c) => acc + c.reviewerRewardBdt * c.totalSlots, 0);
 
@@ -79,6 +81,18 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Navigation Tabs */}
       <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto scrollbar-none">
+        <button
+          onClick={() => setActiveTab('signups')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            activeTab === 'signups'
+              ? 'bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/20'
+              : 'bg-white/5 text-white/60 hover:text-white'
+          }`}
+        >
+          <UserPlus className="w-4 h-4" />
+          <span>{language === 'bn' ? 'সাইন আপ অনুমোদন' : 'Signup Approvals'}</span>
+        </button>
+
         <button
           onClick={() => setActiveTab('reviewers')}
           className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
@@ -185,6 +199,9 @@ export const AdminDashboard: React.FC = () => {
           <span>{language === 'bn' ? 'এস্ক্রো ও হেলথ' : 'Escrow & Health'}</span>
         </button>
       </div>
+
+      {/* Tab 0: Signup Approvals */}
+      {activeTab === 'signups' && <AccountApprovals />}
 
       {/* Tab 1: Reviewer Directory */}
       {activeTab === 'reviewers' && <ReviewerDirectory />}
