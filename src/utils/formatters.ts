@@ -7,7 +7,7 @@ export function toBengaliDigits(input: number | string): string {
   return str.replace(/[0-9]/g, (w) => BENGALI_NUMERALS[+w]);
 }
 
-export function formatBdt(amount: number, lang: Language = 'en'): string {
+export function formatBdt(amount: number, lang: Language = 'bn'): string {
   const formattedEn = new Intl.NumberFormat('en-IN').format(amount);
   if (lang === 'bn') {
     return `৳${toBengaliDigits(formattedEn)}`;
@@ -15,7 +15,7 @@ export function formatBdt(amount: number, lang: Language = 'en'): string {
   return `৳${formattedEn}`;
 }
 
-export function formatNumber(num: number, lang: Language = 'en'): string {
+export function formatNumber(num: number, lang: Language = 'bn'): string {
   const formattedEn = new Intl.NumberFormat('en-IN').format(num);
   if (lang === 'bn') {
     return toBengaliDigits(formattedEn);
@@ -23,7 +23,7 @@ export function formatNumber(num: number, lang: Language = 'en'): string {
   return formattedEn;
 }
 
-export function formatDate(dateString: string, lang: Language = 'en'): string {
+export function formatDate(dateString: string, lang: Language = 'bn'): string {
   try {
     const d = new Date(dateString);
     if (isNaN(d.getTime())) return dateString;
@@ -43,7 +43,7 @@ export function formatDate(dateString: string, lang: Language = 'en'): string {
   }
 }
 
-export function formatRelativeTime(dateString: string, lang: Language = 'en'): string {
+export function formatRelativeTime(dateString: string, lang: Language = 'bn'): string {
   try {
     const d = new Date(dateString);
     const now = new Date();

@@ -185,7 +185,20 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRole, setCurrentRole] = useState<UserRole>('reviewer'); // Default to rich Reviewer experience, switchable anytime
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguageState] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem('bringdollar_language');
+      if (saved === 'en' || saved === 'bn') return saved;
+    } catch {}
+    return 'bn';
+  });
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    try {
+      localStorage.setItem('bringdollar_language', lang);
+    } catch {}
+  };
   
   // Navigation active tabs
   const [activeReviewerTab, setActiveReviewerTab] = useState<string>('home');
@@ -244,7 +257,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   
   const toggleLanguage = () => {
-    setLanguage((prev) => (prev === 'bn' ? 'en' : 'bn'));
+    setLanguageState((prev) => {
+      const next = prev === 'bn' ? 'en' : 'bn';
+      try {
+        localStorage.setItem('bringdollar_language', next);
+      } catch {}
+      return next;
+    });
   };
 
   // Report a failed background sync-to-server call without disrupting the (already

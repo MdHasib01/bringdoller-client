@@ -526,9 +526,9 @@ export type TranslationSection = keyof typeof translations.en;
 export function getTranslation<S extends TranslationSection>(
   section: S,
   key: keyof typeof translations.en[S],
-  lang: Language = 'en'
+  lang: Language = 'bn'
 ): string {
-  const currentLang = lang in translations ? lang : 'en';
-  const targetSection = translations[currentLang as keyof typeof translations]?.[section] || translations.en[section];
-  return (targetSection as any)?.[key] || (translations.en[section] as any)?.[key] || '';
+  const currentLang = lang in translations ? lang : 'bn';
+  const targetSection = translations[currentLang as keyof typeof translations]?.[section] || translations.bn[section];
+  return (targetSection as any)?.[key] || (translations.bn[section] as any)?.[key] || '';
 }

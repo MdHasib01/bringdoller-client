@@ -129,16 +129,18 @@ export const Header: React.FC = () => {
             </button>
           </div>
 
-          {/* Current Section Badge */}
-          <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-semibold text-xs shadow-md ${currentRoleConfig.color}`}
-          >
-            <currentRoleConfig.icon className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">
-              {language === 'bn' ? currentRoleConfig.labelBn : currentRoleConfig.labelEn}
-            </span>
-            <span className="md:hidden capitalize font-mono text-[11px] font-bold">{badgeRole}</span>
-          </div>
+          {/* Current Section Badge (hidden on public landing and for guest visitors) */}
+          {badgeRole !== 'guest' && location.pathname !== '/' && (
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-semibold text-xs shadow-md ${currentRoleConfig.color}`}
+            >
+              <currentRoleConfig.icon className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">
+                {language === 'bn' ? currentRoleConfig.labelBn : currentRoleConfig.labelEn}
+              </span>
+              <span className="md:hidden capitalize font-mono text-[11px] font-bold">{badgeRole}</span>
+            </div>
+          )}
 
           {/* Right Utilities: Language Toggle, Notifications, Profile Avatar */}
           <div className="flex items-center gap-2 sm:gap-3">
